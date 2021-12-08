@@ -34,11 +34,11 @@ class Auth:
             LOGGER.warn("Access token is not valid, renewing now")
             self._renew_time = datetime.now()
         else:
-            expire_date = datetime.fromtimestamp(self._auth_dict.get("expire_date", 0))
+            expire_date = datetime.fromtimestamp(
+                self._auth_dict.get("expire_date", 0))
             self._renew_time = expire_date - AUTO_REFRESH_DELTA
-            LOGGER.info(
-                "Expire date is %s, renewing at %s", expire_date, self._renew_time
-            )
+            LOGGER.info("Expire date is %s, renewing at %s", expire_date,
+                        self._renew_time)
 
         self.cancel_auto_renewal()
         self._auto_renewal_task = asyncio.create_task(self._do_auto_renewal())
@@ -48,7 +48,7 @@ class Auth:
             json.dump(self._auth_dict, f)
 
     async def _do_auth(self, refresh_token):
-        auth_url = "https://api.whrcloud.eu/oauth/token"
+        auth_url = "https://api.whrcloud.com/oauth/token"
         auth_header = {
             "Content-Type": "application/x-www-form-urlencoded",
             "Brand": "Whirlpool",
@@ -58,35 +58,33 @@ class Auth:
         }
 
         auth_data = {
-            "client_id": "whirlpool_android",
-            "client_secret": "i-eQ8MD4jK4-9DUCbktfg-t_7gvU-SrRstPRGAYnfBPSrHHt5Mc0MFmYymU2E2qzif5cMaBYwFyFgSU6NTWjZg",
+            "client_id":
+            "whirlpool_android",
+            "client_secret":
+            "i-eQ8MD4jK4-9DUCbktfg-t_7gvU-SrRstPRGAYnfBPSrHHt5Mc0MFmYymU2E2qzif5cMaBYwFyFgSU6NTWjZg",
         }
 
         if refresh_token:
             LOGGER.info("Fetching auth with refresh token")
-            auth_data.update(
-                {
-                    "grant_type": "refresh_token",
-                    "refresh_token": refresh_token,
-                }
-            )
+            auth_data.update({
+                "grant_type": "refresh_token",
+                "refresh_token": refresh_token,
+            })
         else:
             LOGGER.info("Fetching auth with user/pass")
-            auth_data.update(
-                {
-                    "grant_type": "password",
-                    "username": self._username,
-                    "password": self._password,
-                }
-            )
+            auth_data.update({
+                "grant_type": "password",
+                "username": self._username,
+                "password": self._password,
+            })
 
         session = aiohttp.ClientSession()
 
         try:
             with async_timeout.timeout(30):
-                async with session.post(
-                    auth_url, data=auth_data, headers=auth_header
-                ) as r:
+                async with session.post(auth_url,
+                                        data=auth_data,
+                                        headers=auth_header) as r:
                     LOGGER.debug("Auth status: " + str(r.status))
                     if r.status == 200:
                         return json.loads(await r.text())
@@ -99,8 +97,7 @@ class Auth:
 
     async def do_auth(self, store=True):
         fetched_auth_data = await self._do_auth(
-            self._auth_dict.get("refresh_token", None)
-        )
+            self._auth_dict.get("refresh_token", None))
 
         if not fetched_auth_data:
             self._auth_dict = {}
@@ -111,7 +108,8 @@ class Auth:
         self._auth_dict = {
             "access_token": fetched_auth_data.get("access_token", ""),
             "refresh_token": fetched_auth_data.get("refresh_token", ""),
-            "expire_date": curr_timestamp + fetched_auth_data.get("expires_in", ""),
+            "expire_date":
+            curr_timestamp + fetched_auth_data.get("expires_in", ""),
             "accountId": fetched_auth_data.get("accountId", ""),
             "SAID": fetched_auth_data.get("SAID", ""),
         }
@@ -134,10 +132,8 @@ class Auth:
             await self.do_auth()
 
     def is_access_token_valid(self):
-        return (
-            "access_token" in self._auth_dict
-            and self._auth_dict.get("expire_date", 0) > datetime.now().timestamp()
-        )
+        return ("access_token" in self._auth_dict and self._auth_dict.get(
+            "expire_date", 0) > datetime.now().timestamp())
 
     def get_access_token(self):
         return self._auth_dict.get("access_token", None)

@@ -10,14 +10,15 @@ from .auth import Auth
 
 LOGGER = logging.getLogger(__name__)
 
-WSURI = "wss://websocketservice.wcloud-emea.eu-gb.containers.appdomain.cloud/appliance/websocket"
+WSURI = "wss://websocketservice.wcloud-emea.com-gb.containers.appdomain.cloud/appliance/websocket"
 MSG_TERMINATION = "\n\n\0"
 
 RECV_MSG_MATCHER = re.compile("{(.*)}\\x00")
 
 
 class EventSocket:
-    def __init__(self, access_token, said, msg_listener: Callable[[str], None]):
+    def __init__(self, access_token, said, msg_listener: Callable[[str],
+                                                                  None]):
         self._access_token = access_token
         self._said = said
         self._msg_listener = msg_listener
@@ -48,9 +49,11 @@ class EventSocket:
 
         timeout = aiohttp.ClientTimeout(total=None)
         async with aiohttp.ClientSession(timeout=timeout) as session:
-            async with session.ws_connect(
-                WSURI, timeout=None, autoclose=True, autoping=True, heartbeat=45
-            ) as ws:
+            async with session.ws_connect(WSURI,
+                                          timeout=None,
+                                          autoclose=True,
+                                          autoping=True,
+                                          heartbeat=45) as ws:
                 self._websocket = ws
                 await self._send_msg(ws, self._create_connect_msg())
                 await self._recv_msg(ws)
@@ -64,16 +67,17 @@ class EventSocket:
                         LOGGER.error("Socket message error")
                         break
                     if msg.type in [
-                        aiohttp.WSMsgType.CLOSE,
-                        aiohttp.WSMsgType.CLOSING,
-                        aiohttp.WSMsgType.CLOSED,
+                            aiohttp.WSMsgType.CLOSE,
+                            aiohttp.WSMsgType.CLOSING,
+                            aiohttp.WSMsgType.CLOSED,
                     ]:
                         LOGGER.debug(
                             f"Stopping receiving. Message type: {str(msg.type)}"
                         )
                         break
                     if msg.type != aiohttp.WSMsgType.TEXT:
-                        LOGGER.error(f"Socket message type is invalid: {str(msg.type)}")
+                        LOGGER.error(
+                            f"Socket message type is invalid: {str(msg.type)}")
                         continue
 
                     match = RECV_MSG_MATCHER.findall(msg.data)
@@ -87,7 +91,8 @@ class EventSocket:
             # TODO: add a timer to reset _reconnect_tries to 3 after 1 hour or so
             LOGGER.info("Reconnecting...")
             self._reconnect_tries = self._reconnect_tries - 1
-            self._run_future = asyncio.get_event_loop().create_task(self._run())
+            self._run_future = asyncio.get_event_loop().create_task(
+                self._run())
 
     def start(self):
         self._running = True

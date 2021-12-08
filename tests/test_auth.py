@@ -6,10 +6,11 @@ from whirlpool.auth import Auth
 
 from . import MockResponse
 
-AUTH_URL = "https://api.whrcloud.eu/oauth/token"
+AUTH_URL = "https://api.whrcloud.com/oauth/token"
 AUTH_DATA = {
     "client_id": "whirlpool_android",
-    "client_secret": "i-eQ8MD4jK4-9DUCbktfg-t_7gvU-SrRstPRGAYnfBPSrHHt5Mc0MFmYymU2E2qzif5cMaBYwFyFgSU6NTWjZg",
+    "client_secret":
+    "i-eQ8MD4jK4-9DUCbktfg-t_7gvU-SrRstPRGAYnfBPSrHHt5Mc0MFmYymU2E2qzif5cMaBYwFyFgSU6NTWjZg",
     "grant_type": "password",
     "username": "email",
     "password": "secretpass",
@@ -21,7 +22,6 @@ AUTH_HEADERS = {
     "WP-CLIENT-BRAND": "WHIRLPOOL",
     "WP-CLIENT-COUNTRY": "EN",
 }
-
 
 pytestmark = pytest.mark.asyncio
 
@@ -40,14 +40,15 @@ async def test_auth_success(caplog, aio_httpclient):
         "SAID": ["SAID1", "SAID2"],
         "jti": "?????",
     }
-    aio_httpclient.post.return_value = MockResponse(json.dumps(mock_resp_data), 200)
+    aio_httpclient.post.return_value = MockResponse(json.dumps(mock_resp_data),
+                                                    200)
 
     await auth.do_auth(store=False)
     assert auth.is_access_token_valid()
     assert auth.get_said_list() == ["SAID1", "SAID2"]
-    aio_httpclient.post.assert_called_with(
-        AUTH_URL, data=AUTH_DATA, headers=AUTH_HEADERS
-    )
+    aio_httpclient.post.assert_called_with(AUTH_URL,
+                                           data=AUTH_DATA,
+                                           headers=AUTH_HEADERS)
     aio_httpclient.close.assert_called_once()
 
 
@@ -60,12 +61,13 @@ async def test_auth_bad_credentials(caplog, aio_httpclient):
         "error_description": "Bad credentials",
         "code": "13000",
     }
-    aio_httpclient.post.return_value = MockResponse(json.dumps(mock_resp_data), 400)
+    aio_httpclient.post.return_value = MockResponse(json.dumps(mock_resp_data),
+                                                    400)
 
     await auth.do_auth(store=False)
     assert auth.is_access_token_valid() == False
     assert auth.get_said_list() == None
-    aio_httpclient.post.assert_called_with(
-        AUTH_URL, data=AUTH_DATA, headers=AUTH_HEADERS
-    )
+    aio_httpclient.post.assert_called_with(AUTH_URL,
+                                           data=AUTH_DATA,
+                                           headers=AUTH_HEADERS)
     aio_httpclient.close.assert_called_once()
